@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
@@ -6,9 +7,12 @@ function App() {
   const [message, setMessage] = useState({ message: '' });
 
   const getMessage = async () => {
-    fetch(API_URL + '/')
-      .then((response) => response.json())
-      .then((data) => setMessage(data));
+    try {
+      const response = await axios.get(API_URL + '/');
+      setMessage(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   };
 
   useEffect(() => {
