@@ -31,12 +31,6 @@ mongoose
   })
   .catch((e) => console.log(e));
 
-
-// Start the server on port 3000
-app.listen(3000), () => {
-  console.log('Server is running on port 3000');
-};
-
 // Define a route
 app.get('/', (req, res) => {
   const jsonData = {
@@ -84,21 +78,79 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
 // Define a GET route
 app.get("/get-files", async (req, res) => {
   try {
-    PdfSchema.find({}).then((data) => {
-      res.send({ status: "ok", data: data });
-    });
-  } catch (error) {}
+    // Find the latest uploaded PDF file
+    const latestPdf = await PdfSchema.findOne({}).sort({ $natural: -1 });
+
+    if (latestPdf) {
+      res.status(200).json({ data: latestPdf });
+    } else {
+      res.status(404).json({ error: "No PDF file found" });
+    }
+  } catch (error) {
+    console.error("Error fetching latest uploaded PDF file:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
+app.get("/get-all-files", async (req, res) => {
+  try {
+    const allFiles = await PdfSchema.find({});
+    res.status(200).json({ data: allFiles });
+  } catch (error) {
+    console.error("Error fetching all uploaded PDF files:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// // Define a GET route to get the latest uploaded PDF file
+// app.get("/get-latest-pdf", async (req, res) => {
+//   try {
+//     // Find the latest uploaded PDF file by sorting documents in descending order based on upload date
+//     const latestPdf = await PdfSchema.findOne({}, {}, { sort: { 'uploadDate': -1 } });
+
+//     if (latestPdf) {
+//       res.status(200).json({ data: latestPdf });
+//     } else {
+//       res.status(404).json({ error: "No PDF file found" });
+//     }
+//   } catch (error) {
+//     console.error("Error fetching latest uploaded PDF file:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+
+
+
+// Start the server on port 5000
+app.listen(5000, () => {
+  console.log("Server Started");
+});
+
+
 // Endpoint to handle printing requests
+const { print } = require('pdf-to-printer');
+
 app.post('/print-pdf', async (req, res) => {
   try {
-    const { pdfFilePath, options } = req.body;
+    const { pdfFilePath, printer, pages, monochrome, copies, paperSize, scale } = req.body;
 
     // Validate required inputs
     if (!pdfFilePath) {
       return res.status(400).json({ error: 'PDF file path is required.' });
     }
+
+    // Prepare options object
+    const options = {
+      printer: printer,
+      pages: pages,
+      monochrome: monochrome,
+      copies: copies, 
+      paperSize: paperSize,
+      scale: scale
+    };
 
     // Print the PDF file with specified options
     await print(pdfFilePath, options);
@@ -110,11 +162,50 @@ app.post('/print-pdf', async (req, res) => {
   }
 });
 
+// Endpoint to fetch available printers
+const { getPrinters } = require('pdf-to-printer');
+app.get('/printers', async (req,res) => {
+  try {
+    const printers = await getPrinters();
+    res.json({ printers });
+    console.log("Printers: ", printers);
+  } catch (error) {
+    console.error('Error fetching printers:', error);
+    res.status(500).json({ error: 'Failed to fetch printers.' });
+  }
+});
 
-// Start the server on port 5000
-app.listen(5000, () => {
-  console.log("Server Started");
+//get the default printer
+const { getDefaultPrinter } = require('pdf-to-printer');
+app.get('/default-printer', async (req,res) => {
+  try {
+    const defaultPrinter = getDefaultPrinter();
+    res.json({ defaultPrinter });
+    console.log("Default Printer: ", defaultPrinter);
+  } catch (error) {
+    console.error('Error fetching default printer:', error);
+    res.status(500).json({ error: 'Failed to fetch default printer.' });
+  }
 });
 
 
+// Endpoint to print PDF file
+app.post('/print-pdfs', async (req, res) => {
+    try {
+        const { pdfFilePath } = req.body;
 
+        // Validate required inputs
+        if (!pdfFilePath) {
+            return res.status(400).json({ error: 'PDF file path is required.' });
+        }
+
+        // Print the PDF file
+        await print(pdfFilePath);
+        console.log('PDF printed successfully.');
+
+        res.json({ message: 'PDF printed successfully.' });
+    } catch (error) {
+        console.error('Error printing PDF:', error);
+        res.status(500).json({ error: 'Failed to print PDF.' });
+    }
+});

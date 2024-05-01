@@ -14,7 +14,7 @@ interface PdfData {
 }
 
 // Main component
-function App(): JSX.Element {
+function Upload(): JSX.Element {
   // State to store title
   const [title, setTitle] = useState<string>("");
   // State to store file
@@ -137,4 +137,4 @@ function App(): JSX.Element {
   );
 }
 
-export default App;
+export default Upload;
