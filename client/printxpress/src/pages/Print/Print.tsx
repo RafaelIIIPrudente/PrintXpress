@@ -3,6 +3,9 @@ import Navbar from "../../components/Navbar";
 import backgroundImage from "../../assets/bg.png";
 import logo from "../../assets/logo.png";
 import { Link } from "react-router-dom";
+import grayscale from "../../assets/grayscale.png";
+import colored from "../../assets/colored.png";
+import pricing from "../../assets/smart-pricing.png";
 
 const Print: React.FC = () => {
   const [printOption, setPrintOption] = useState("all");
@@ -160,15 +163,36 @@ const Print: React.FC = () => {
 
               <div className="flex flex-col items-center mt-4">
                 <button className="hover:bg-gray-200 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
-                  Grayscale
+                  <div className="flex items-center justify-center">
+                    <img
+                      src={grayscale}
+                      alt="grayscale"
+                      className="w-6 h-6 "
+                    ></img>
+                    Grayscale
+                  </div>
                 </button>
                 <button className="hover:bg-orange-400 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
-                  Colored
+                  <div className="flex items-center justify-center">
+                    <img
+                      src={colored}
+                      alt="colored"
+                      className="w-6 h-6 mr-2"
+                    ></img>
+                    Colored
+                  </div>
                 </button>
 
                 <Link to="/print-summary">
-                  <button className="bg-gray-400 hover:bg-gray-500 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
-                    Smart Pricing
+                  <button className="bg-gray-300 hover:bg-gray-400 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
+                    <div className="flex items-center justify-center">
+                      <img
+                        src={pricing}
+                        alt="smart-pricing"
+                        className="w-5 h-5 mr-2"
+                      ></img>
+                      Smart Pricing
+                    </div>
                   </button>
                 </Link>
               </div>
