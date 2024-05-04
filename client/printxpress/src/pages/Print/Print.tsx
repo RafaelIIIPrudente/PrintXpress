@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Navbar from "../../components/Navbar";
 import backgroundImage from "../../assets/bg.png";
 import logo from "../../assets/logo.png";
+import { Link } from "react-router-dom";
 
 const Print: React.FC = () => {
   const [printOption, setPrintOption] = useState("all");
@@ -165,9 +166,11 @@ const Print: React.FC = () => {
                   Colored
                 </button>
 
-                <button className="bg-gray-400 hover:bg-gray-500 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
-                  Smart Pricing
-                </button>
+                <Link to="/print-summary">
+                  <button className="bg-gray-400 hover:bg-gray-500 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
+                    Smart Pricing
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
