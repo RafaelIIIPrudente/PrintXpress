@@ -19,7 +19,7 @@ const Home = () => {
           Choose your Service
         </div>
 
-        <Link to="/print" className="">
+        <Link to="/upload" className="">
           <img
             src={print}
             alt="Logo"
