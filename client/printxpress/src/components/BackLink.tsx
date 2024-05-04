@@ -10,7 +10,7 @@ interface BackLinkProps {
 const BackLink: React.FC<BackLinkProps> = ({ to, imageSource, alt }) => {
   return (
     <Link to={to}>
-      <img src={imageSource} alt={alt} className="h-16 w-16 ml-4" />
+      <img src={imageSource} alt={alt} className="h-16 w-16 ml-4 hover:bg-white rounded-full" />
     </Link>
   );
 };

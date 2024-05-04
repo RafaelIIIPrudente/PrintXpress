@@ -1,147 +1,180 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import PdfComp from "../Upload/pdfComp";
-
-// Interface for PDF data
-interface PdfData {
-  title: string;
-  pdf: string;
-}
+import React, { useState } from "react";
+import Navbar from "../../components/Navbar";
+import backgroundImage from "../../assets/bg.png";
+import logo from "../../assets/logo.png";
 
 const Print: React.FC = () => {
-  // const [pdfFilePath] = useState("C:\\Users\\PC\\Downloads\\postings.pdf");
+  const [printOption, setPrintOption] = useState("all");
+  const [fromPage, setFromPage] = useState(1);
+  const [toPage, setToPage] = useState(1);
+  const [numOfCopies, setNumOfCopies] = useState(1);
 
-  const [uploadedFiles, setUploadedFiles] = useState<PdfData[] | null>(null); // State to store the list of uploaded files
-  const [selectedPdf, setSelectedPdf] = useState<string>(""); // State to store the selected PDF file
-  const [printer] = useState("EPSON L3110 Series (Copy 2)");
-  const [pages, setPages] = useState('');
-  const [monochrome, setMonochrome] = useState(false);
-  const [copies, setCopies] = useState(1);
-  const [paperSize] = useState('letter');
-  const [scale] = useState('shrink');
+  const handlePrintOptionChange = (option: string) => {
+    setPrintOption(option);
+  };
 
-  // Fetch the list of uploaded PDF files when the component mounts
-  useEffect(() => {
-    fetchUploadedFiles();
-  }, []); // Pass an empty dependency array to run the effect only once
-  
-  // Function to fetch the list of uploaded PDF files
-  const fetchUploadedFiles = async () => {
-    try {
-      const response = await axios.get<{ data: PdfData[] }>(
-        "http://localhost:5000/get-all-files"
-      );
-      setUploadedFiles(response.data.data);
-      console.log("Uploaded Files:", uploadedFiles);
-
-      // Set the selected PDF to the first uploaded PDF, if available
-      if (response.data.data && response.data.data.length > 0) {
-        const selected = response.data.data[0].pdf
-        setSelectedPdf(response.data.data[0].pdf);
-        console.log("Selected PDF:", selectedPdf);
-      }
-    } catch (error) {
-      console.error("Error fetching uploaded files:", error);
+  const handleIncrement = (type: string) => {
+    if (type === "from") {
+      setFromPage(fromPage + 1);
+    } else if (type === "to") {
+      setToPage(toPage + 1);
+    } else if (type === "copies") {
+      setNumOfCopies(numOfCopies + 1);
     }
   };
 
-  // Function to handle the form submission
-  const handleSubmit = async () => {
-    try {
-      // Send POST request to /print-pdf endpoint
-      const response = await axios.post("http://localhost:5000/print-pdf", {
-        pdfFilePath: selectedPdf,
-        printer: printer,
-        pages: pages,
-        monochrome: monochrome,
-        copies: copies,
-        paperSize: paperSize,
-        scale: scale
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.error('Error printing PDF:', error);
+  const handleDecrement = (type: string) => {
+    if (type === "from" && fromPage > 1) {
+      setFromPage(fromPage - 1);
+    } else if (type === "to" && toPage > 1) {
+      setToPage(toPage - 1);
+    } else if (type === "copies" && numOfCopies > 1) {
+      setNumOfCopies(numOfCopies - 1);
     }
   };
-
-  const smartPricing = async () => {
-    const pricePerPage = 3; // Define the price per page
-
-    try {
-      // Check if there are uploaded files
-      if (uploadedFiles && uploadedFiles.length > 0) {
-        // Get the latest uploaded PDF data
-
-        const totalPages = parseInt(pages);
-
-        // Calculate the total price
-        const totalPrice = totalPages * copies * pricePerPage;
-
-        console.log('Total Pages:', totalPages);
-        console.log('Copies:', copies);
-        console.log('Total Price:', totalPrice);
-      } else {
-        console.log('No uploaded files found.');
-      }
-    } catch (error) {
-      console.error('Error calculating price:', error);
-    }
-  };
-
-
 
   return (
+    <div
+      className="bg-cover bg-center min-h-screen"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
+      <div className="max-w-[1500px] mx-auto text-center">
+        <Navbar />
+        <div className="mt-8 flex items-center justify-center mx-20">
+          <div className="pr-40">
+            <div className="text-xl ml-1 text-left mb-1"> Preview: </div>
+            <div className="border rounded-lg w-[550px] h-[550px] bg-white">
+              {/* sample sa sulod, preview nadi sang pdf */}
+              <img src={logo} alt="Logo" className="h-[550px] w-[550px] mr-2" />
+            </div>
+          </div>
 
-    <div>
-      <PdfComp pdfFile={selectedPdf} />
-      
-      {/* <div className="uploaded">
-        <h4>Uploaded PDF:</h4>
-        <div className="output-div">
-          {uploadedFiles && Array.isArray(uploadedFiles) && uploadedFiles.map((data: PdfData) => (
-            setSelectedPdf(data.pdf), <PdfComp pdfFile={`http://localhost:5000/files/${data.pdf}`} />
-          ))}
+          <div className="">
+            <div className="text-center text-[40px] font-semibold">
+              Print<span className="text-yellow-500">X</span>press
+            </div>
+            <div className="border rounded-lg w-[380px] h-[480px] bg-white p-4">
+              <div className="flex mb-2 text-lg mt-4">
+                <div className="text-left font-semibold mr-11">File Name: </div>
+                <div className="text-right"> rap.pdf</div>
+              </div>
+              <div className="flex mb-2 text-lg">
+                <div className="text-left font-semibold mr-8">Total Pages:</div>
+                <div className="text-left"> 2 </div>
+              </div>
+              <div className="flex text-lg">
+                <div className="text-left font-semibold">Pages to Print: </div>
+                <div className="flex flex-col">
+                  <div className="flex ml-3">
+                    <input
+                      type="radio"
+                      id="allPages"
+                      name="printOption"
+                      value="all"
+                      checked={printOption === "all"}
+                      onChange={() => handlePrintOptionChange("all")}
+                      className="mr-1"
+                    />
+                    <label htmlFor="allPages" className="ml-2">
+                      All Pages
+                    </label>
+                  </div>
+                  <div className="flex ml-3">
+                    <input
+                      type="radio"
+                      id="specificPages"
+                      name="printOption"
+                      value="specific"
+                      checked={printOption === "specific"}
+                      onChange={() => handlePrintOptionChange("specific")}
+                      className="mr-1"
+                    />
+                    <label htmlFor="specificPages" className="ml-2">
+                      Specific Pages
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {printOption === "specific" && (
+                <>
+                  <div className="flex items-center mt-2">
+                    <div className="text-left pl-40"> From: </div>
+                    <div className="flex items-center ml-2">
+                      <div>{fromPage}</div>
+                      <button
+                        className="ml-2 rounded-full bg-red-500 px-2 text-white"
+                        onClick={() => handleDecrement("from")}
+                      >
+                        -
+                      </button>
+                      <button
+                        className="ml-2 rounded-full bg-blue-500 px-2 text-white"
+                        onClick={() => handleIncrement("from")}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center mt-3">
+                    <div className="text-left pl-40"> To: </div>
+                    <div className="flex items-center ml-7">
+                      <div>{toPage}</div>
+                      <button
+                        className="ml-2 rounded-full bg-red-500 px-2 text-white"
+                        onClick={() => handleDecrement("to")}
+                      >
+                        -
+                      </button>
+                      <button
+                        className="ml-2 rounded-full bg-blue-500 px-2 text-white"
+                        onClick={() => handleIncrement("to")}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center mt-8">
+                <div className="text-left text-lg font-semibold">
+                  Number of Copies:
+                </div>
+                <div className="flex items-center ml-4">
+                  <div className="mr-8">{numOfCopies}</div>
+                  <button
+                    className="ml-2 rounded-full bg-red-500 px-2 text-white"
+                    onClick={() => handleDecrement("copies")}
+                  >
+                    -
+                  </button>
+                  <button
+                    className="ml-2 rounded-full bg-blue-500 px-2 text-white"
+                    onClick={() => handleIncrement("copies")}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center mt-4">
+                <button className="hover:bg-gray-200 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
+                  Grayscale
+                </button>
+                <button className="hover:bg-orange-400 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
+                  Colored
+                </button>
+
+                <button className="bg-gray-400 hover:bg-gray-500 mb-3 mr-2 border border-gray-600 w-[250px] py-2  rounded-2xl">
+                  Smart Pricing
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div> */}
-
-      {/* <label>
-        Printer:
-        <input type="text" value={printer} onChange={(e) => setPrinter(e.target.value)} />
-      </label> */}
-      <br />
-      <label>
-        Pages:
-        <input type="text" value={pages} onChange={(e) => setPages(e.target.value)} />
-      </label>
-      <br />
-      <label>
-        Monochrome:
-        <input type="checkbox" checked={monochrome} onChange={(e) => setMonochrome(e.target.checked)} />
-      </label>
-      <br />
-      <label>
-        Copies:
-        <input type="number" value={copies} onChange={(e) => setCopies(parseInt(e.target.value))} />
-      </label>
-      <br />
-      {/* <label>
-        Paper Size:
-        <input type="text" value={paperSize} onChange={(e) => setPaperSize(e.target.value)} />
-      </label> */}
-      <br />
-      {/* <label>
-        Scale:
-        <input type="text" value={scale} onChange={(e) => setScale(e.target.value)} />
-      </label> */}
-      <br />
-      <label>
-        <button onClick={smartPricing}>Calculate</button>
-      </label>
-      <br />
-      <button onClick={handleSubmit}>Print PDF</button>
-
+      </div>
     </div>
   );
-}
+};
 
 export default Print;

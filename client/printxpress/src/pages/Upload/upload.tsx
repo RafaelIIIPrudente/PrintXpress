@@ -2,6 +2,8 @@ import Navbar from "../../components/Navbar";
 import backgroundImage from "../../assets/bg.png";
 import pdf from "../../assets/pdf.png";
 import qr from "../../assets/qr.png";
+import sample from "../../assets/sample-pdf.png";
+import { Link } from "react-router-dom";
 
 const Upload = () => {
   return (
@@ -25,6 +27,10 @@ const Upload = () => {
               alt="pdf"
               className="absolute top-0 right-0 -mt-10 mr-4 w-20 h-20"
             />
+            {/* //sample pdf lang para ma link pero diri ang pdf dapat nga uploaded*/}
+            <Link to="/print">
+              <img src={sample} alt="pdf" className="w-28 h-28 px-4 py-4" />
+            </Link>
           </div>
         </div>
       </div>
