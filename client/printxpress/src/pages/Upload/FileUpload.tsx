@@ -34,7 +34,7 @@ function Upload(): JSX.Element {
     try {
       // Send GET request to server
       const result = await axios.get<{ data: PdfData[] }>(
-        "http://localhost:5000/get-files"
+        "http://localhost:5000/get-all-files"
       );
       console.log(result.data.data);
       // Set PDFs in state
