@@ -39,10 +39,10 @@ app.get('/', (req, res) => {
   res.json(jsonData);
 });
 
-// Define a route
-app.get('/upload', (req, res) => {
-  res.send('Upload a file');
-});
+// // Define a route
+// app.get('/upload', (req, res) => {
+//   res.send('Upload a file');
+// });
 
 
 // Import the multer module
@@ -75,7 +75,8 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
   }
 });
 
-// Define a GET route
+
+//get the latest uploaded PDF file
 app.get("/get-files", async (req, res) => {
   try {
     // Find the latest uploaded PDF file
@@ -92,6 +93,8 @@ app.get("/get-files", async (req, res) => {
   }
 });
 
+
+//get all the upload files 
 app.get("/get-all-files", async (req, res) => {
   try {
     const allFiles = await PdfSchema.find({});
@@ -101,6 +104,7 @@ app.get("/get-all-files", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 
@@ -209,3 +213,89 @@ app.post('/print-pdfs', async (req, res) => {
         res.status(500).json({ error: 'Failed to print PDF.' });
     }
 });
+
+
+// const serialport = require('serialport');
+
+// // Define the SerialPort class
+// const SerialPort = serialport.SerialPort
+// const parsers = serialport.ReadlineParser;
+// const parser = new parsers();
+
+// console.log("SerialPort: ", SerialPort);
+// const Readline = serialport.ReadlineParser;
+
+// // Create a new SerialPort instance with the specified port and settings
+// const port = new SerialPort({
+//   path: 'COM1',
+//   baudRate: 9600,
+//   dataBits: 8,
+//   parity: 'none',
+//   stopBits: 1,
+//   flowControl: false,
+//   parser: new Readline("\n")
+// });
+
+// // Event listener for when the serial port is opened
+// port.on('open', () => {
+//   console.log('Serial port open');
+// });
+
+// // Event listener for errors
+// port.on('error', (err) => {
+//   console.error('Error:', err.message);
+// });
+
+// app.get('/get-serial-data', (req, res) => {
+//   parser.once('data', (data) => {
+
+//     console.log('Data:', data.toString());
+//     res.json({ message: data.toString() });
+//   });
+// });
+
+// // Event listener for data received
+// port.on('data', (data) => {
+//   console.log('Data:', data.toString());
+// });
+
+
+
+
+
+// // Event listener for when the serial port is opened
+// port.on('open', () => {
+//   console.log('Serial port open');
+// });
+
+// port.pipe(new Readline({ delimiter: '\n' }));
+
+// parser.on('data', function(data) {//
+//   console.log('Data:', data);
+// });
+
+
+
+// // Create a new SerialPort instance with the specified port and settings
+// const port = new SerialPort('COM5', {
+//   baudRate: 9600,
+//   dataBits: 8,
+//   parity: 'none',
+//   stopBits: 1,
+//   flowControl: false
+// });
+
+// // Event listener for when the serial port is opened
+// port.on('open', () => {
+//   console.log('Serial port open');
+// });
+
+// // Event listener for errors
+// port.on('error', (err) => {
+//   console.error('Error:', err.message);
+// });
+
+// // Event listener for data received
+// port.on('data', (data) => {
+//   console.log('Data:', data.toString());
+// });

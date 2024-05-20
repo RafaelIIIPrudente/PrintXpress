@@ -10,7 +10,7 @@ interface PdfData {
 
 const Print2: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<PdfData[] | null>(null); // State to store the list of uploaded files
-  const [selectedPdf, setSelectedPdf] = useState<string>("C:\\Users\\PC\\Downloads\\postings.pdf"); // State to store the selected PDF file
+  const [selectedPdf, setSelectedPdf] = useState<string>(""); // State to store the selected PDF file
   const [printer] = useState("EPSON L3110 Series (Copy 2)");
   const [pages, setPages] = useState("");
   const [monochrome, setMonochrome] = useState(false);
@@ -31,6 +31,7 @@ const Print2: React.FC = () => {
       );
       setUploadedFiles(response.data.data);
       console.log("Uploaded Files:", uploadedFiles);
+      console.log(printer)
 
       // Set the selected PDF to the first uploaded PDF, if available
       if (response.data.data && response.data.data.length > 0) {

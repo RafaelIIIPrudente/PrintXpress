@@ -1,17 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import Navbar from "../../components/Navbar";
 import backgroundImage from "../../assets/bg.png";
-import logo from "../../assets/logo.png";
+// import logo from "../../assets/logo.png";
 import { Link } from "react-router-dom";
 import grayscale from "../../assets/grayscale.png";
 import colored from "../../assets/colored.png";
 import pricing from "../../assets/smart-pricing.png";
+import axios from "axios";
+import PdfComp from "../Upload/pdfComp";
+
+// Interface for PDF data
+interface PdfData {
+  title: string;
+  pdf: string;
+}
 
 const Print: React.FC = () => {
   const [printOption, setPrintOption] = useState("all");
+  const [pdfPrint,setPdfPrint] = useState<string>(""); // State to store the selected PDF file
   const [fromPage, setFromPage] = useState(1);
   const [toPage, setToPage] = useState(1);
   const [numOfCopies, setNumOfCopies] = useState(1);
+  const [selectedPdf, setSelectedPdf] = useState<string>(""); // State to store the selected PDF file
+  const [uploadedFiles, setUploadedFiles] = useState<PdfData[] | null>(null); // State to store the list of uploaded files
+
+
+     // Fetch the list of uploaded PDF files when the component mounts
+     useEffect(() => {
+      fetchUploadedFiles();
+    }, []);
+
+
+   // Function to fetch the list of uploaded PDF files
+  const fetchUploadedFiles = async () => {
+    try {
+      const response = await axios.get<{ data: PdfData[] }>(
+        "http://localhost:5000/get-all-files"
+      );
+      setUploadedFiles(response.data.data);
+      console.log("Uploaded Files:", uploadedFiles);
+
+      // Set the selected PDF to the first uploaded PDF, if available
+      if (response.data.data && response.data.data.length > 0) {
+        const pageNumber = response.data.data.length;
+        const selected = response.data.data[pageNumber - 1].pdf;
+
+        // const pdf = selected.replace(/\//g, '\\');
+
+        setPdfPrint(`D:\\Documents\\Rafael III Prudente\\College Files\\Third Year\\Second Semester\\Techno\\PrintXpress\\PrintXpress\\server\\files\\${selected}`);
+        console.log("PDF to Print:", pdfPrint);
+
+        console.log("Selected PDF:", selectedPdf);
+        setSelectedPdf(`http://localhost:5000/files/${selected}`)
+        console.log("Selected PDF:", selectedPdf.replace(/\//g, '\\'));
+      }
+    } catch (error) {
+      console.error("Error fetching uploaded files:", error);
+    }
+  };
 
   const handlePrintOptionChange = (option: string) => {
     setPrintOption(option);
@@ -49,7 +95,8 @@ const Print: React.FC = () => {
             <div className="text-xl ml-1 text-left mb-1"> Preview: </div>
             <div className="border rounded-lg w-[550px] h-[550px] bg-white">
               {/* sample sa sulod, preview nadi sang pdf */}
-              <img src={logo} alt="Logo" className="h-[550px] w-[550px] mr-2" />
+              <PdfComp pdfFile={selectedPdf} />
+
             </div>
           </div>
 
