@@ -214,49 +214,49 @@ app.post('/print-pdfs', async (req, res) => {
 });
 
 
-const serialport = require('serialport');
+// const serialport = require('serialport');
 
-// Define the SerialPort class
-const SerialPort = serialport.SerialPort
-const parsers = serialport.ReadlineParser;
-const parser = new parsers();
+// // Define the SerialPort class
+// const SerialPort = serialport.SerialPort
+// const parsers = serialport.ReadlineParser;
+// const parser = new parsers();
 
-console.log("SerialPort: ", SerialPort);
-const Readline = serialport.ReadlineParser;
+// console.log("SerialPort: ", SerialPort);
+// const Readline = serialport.ReadlineParser;
 
-// Create a new SerialPort instance with the specified port and settings
-const port = new SerialPort({
-  path: 'COM1',
-  baudRate: 9600,
-  dataBits: 8,
-  parity: 'none',
-  stopBits: 1,
-  flowControl: false,
-  parser: new Readline("\n")
-});
+// // Create a new SerialPort instance with the specified port and settings
+// const port = new SerialPort({
+//   path: 'COM1',
+//   baudRate: 9600,
+//   dataBits: 8,
+//   parity: 'none',
+//   stopBits: 1,
+//   flowControl: false,
+//   parser: new Readline("\n")
+// });
 
-// Event listener for when the serial port is opened
-port.on('open', () => {
-  console.log('Serial port open');
-});
+// // Event listener for when the serial port is opened
+// port.on('open', () => {
+//   console.log('Serial port open');
+// });
 
-// Event listener for errors
-port.on('error', (err) => {
-  console.error('Error:', err.message);
-});
+// // Event listener for errors
+// port.on('error', (err) => {
+//   console.error('Error:', err.message);
+// });
 
-app.get('/get-serial-data', (req, res) => {
-  parser.once('data', (data) => {
+// app.get('/get-serial-data', (req, res) => {
+//   parser.once('data', (data) => {
 
-    console.log('Data:', data.toString());
-    res.json({ message: data.toString() });
-  });
-});
+//     console.log('Data:', data.toString());
+//     res.json({ message: data.toString() });
+//   });
+// });
 
-// Event listener for data received
-port.on('data', (data) => {
-  console.log('Data:', data.toString());
-});
+// // Event listener for data received
+// port.on('data', (data) => {
+//   console.log('Data:', data.toString());
+// });
 
 
 
