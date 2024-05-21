@@ -1,5 +1,5 @@
-import logo from "../assets/logo.png";
-import cpulogo from "../assets/cpu-logo.png";
+import logo from "../../assets/logo.png";
+import cpuLogo from "../../assets/cpu-logo.png"
 
 const HomeNavbar = () => {
   // Get current date and time
@@ -37,7 +37,7 @@ const HomeNavbar = () => {
           <p className="text-base">College of Engineering</p>
         </div>
 
-        <img src={cpulogo} alt="Logo" className="h-20 w-20 mr-2 mx-auto" />
+        <img src={cpuLogo} alt="Logo" className="h-20 w-20 mr-2 mx-auto" />
       </div>
     </div>
   );
