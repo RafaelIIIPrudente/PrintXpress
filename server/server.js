@@ -214,44 +214,80 @@ app.post('/print-pdfs', async (req, res) => {
 });
 
 
-// const serialport = require('serialport');
+const serialport = require('serialport');
 
-// // Define the SerialPort class
-// const SerialPort = serialport.SerialPort
-// const parsers = serialport.ReadlineParser;
-// const parser = new parsers();
+// Define the SerialPort class
+const SerialPort = serialport.SerialPort
+const parsers = serialport.ReadlineParser;
+const parser = new parsers();
 
-// console.log("SerialPort: ", SerialPort);
-// const Readline = serialport.ReadlineParser;
+console.log("SerialPort: ", SerialPort);
+const Readline = serialport.ReadlineParser;
 
-// // Create a new SerialPort instance with the specified port and settings
-// const port = new SerialPort({
-//   path: 'COM1',
-//   baudRate: 9600,
-//   dataBits: 8,
-//   parity: 'none',
-//   stopBits: 1,
-//   flowControl: false,
-//   parser: new Readline("\n")
-// });
+// Create a new SerialPort instance with the specified port and settings
+const port = new SerialPort({
+  path: 'COM1',
+  baudRate: 9600,
+  dataBits: 8,
+  parity: 'none',
+  stopBits: 1,
+  flowControl: false,
+  parser: new Readline("\n")
+});
 
-// // Event listener for when the serial port is opened
-// port.on('open', () => {
-//   console.log('Serial port open');
-// });
+// Event listener for when the serial port is opened
+port.on('open', () => {
+  console.log('Serial port open');
+});
 
-// // Event listener for errors
-// port.on('error', (err) => {
-//   console.error('Error:', err.message);
-// });
+// Event listener for errors
+port.on('error', (err) => {
+  console.error('Error:', err.message);
+});
 
-// app.get('/get-serial-data', (req, res) => {
-//   parser.once('data', (data) => {
 
-//     console.log('Data:', data.toString());
-//     res.json({ message: data.toString() });
-//   });
-// });
+let dataChunks = [];
+let latestValue = null; // Initialize latestValue
+    
+port.on('data', (chunk) => {
+  // Convert the chunk to a number and push it to the dataChunks array
+  const numberChunk = parseFloat(chunk);
+  if (!isNaN(numberChunk)) {
+    dataChunks.push(numberChunk);
+    console.log('Data:', dataChunks);
+    
+    // Automatically update the latest value
+    latestValue = numberChunk;
+    console.log('Latest Value:', latestValue);
+  }
+});
+
+// Define the route handler
+app.get('/get-serial-data', (req, res) => {
+  try {
+    // Send the latest value as JSON response
+    res.json({ latestValue: latestValue });
+  } catch (error) {
+    console.error('Error while reading serial data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/reset-serial-data', (req, res) => {
+  try {
+    latestValue = 0;
+    res.json({ message: 'Serial data reset successfully' });
+  } catch (error) {
+    console.error('Error resetting serial data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// // Simulate data reception for example purposes
+// setInterval(() => {
+//   const simulatedData = (Math.random() * 100).toFixed(2); // Simulated numeric data
+//   port.emit('data', simulatedData);
+// }, 1000); // Simulate data reception every second
 
 // // Event listener for data received
 // port.on('data', (data) => {
@@ -276,7 +312,7 @@ app.post('/print-pdfs', async (req, res) => {
 
 
 // // Create a new SerialPort instance with the specified port and settings
-// const port = new SerialPort('COM5', {
+// const port = new SerialPort('COM1', {
 //   baudRate: 9600,
 //   dataBits: 8,
 //   parity: 'none',

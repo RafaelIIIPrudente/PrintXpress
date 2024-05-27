@@ -4,8 +4,8 @@ import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import './index.css'
 
 import FileUpload from './pages/Upload/FileUpload'
-import Print from './pages/Print/Print';
 import Home from './pages/home/Home';
+import Print from './pages/Print/Print';
 // import CoinSlot from './pages/coinslot/coinslot';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
