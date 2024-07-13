@@ -2,13 +2,13 @@
   "canisters": {
       "icp_simple_site": {
           "frontend": {
-              "entrypoint": "build/index.html"
+              "entrypoint": "client/printxpress/src/main.tsx"
           },
-          "source": ["build"],
+          "source": ["src"],
           "type": "assets"
       }
   },
-  "dfx": "0.17.0",
+  "dfx": "0.20.1",
   "version": 1,
   "networks": {
       "local": {
