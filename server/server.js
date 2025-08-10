@@ -15,21 +15,27 @@ app.use(cors());
 app.use(express.json());
 app.use("/files", express.static("files"));
 
-// Import the mongodb module
-const mongoose = require('mongoose');
+// Load environment variables
+require('dotenv').config();
 
-//  Connection URL
-const url = "mongodb+srv://rafaeliiiprudente21:lEPRm2XpwHwAMZbu@printxpress.kcgn68w.mongodb.net/?retryWrites=true&w=majority&appName=printXpress";
+// Import Supabase client
+const supabase = require('./supabase');
 
-// Connect to the database
-mongoose
-  .connect(url, {
-    useNewUrlParser: true,
-  })
-  .then(() => {
-    console.log("Connected to database");
-  })
-  .catch((e) => console.log(e));
+// Test Supabase connection
+const testConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('pdf_details').select('*').limit(1);
+    if (error) {
+      console.log("Supabase connection error:", error);
+    } else {
+      console.log("Connected to Supabase database");
+    }
+  } catch (e) {
+    console.log("Supabase connection failed:", e);
+  }
+};
+
+testConnection();
 
 // Define a route
 app.get('/', (req, res) => {
@@ -58,8 +64,6 @@ const storage = multer.diskStorage({
 });
 
 // Create an instance of the multer module
-require("./pdfDetails");
-const PdfSchema = mongoose.model("PdfDetails");
 const upload = multer({ storage: storage });
 
 // Define a POST route
@@ -67,11 +71,24 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
   console.log(req.file);
   const title = req.body.title;
   const fileName = req.file.filename;
+  
   try {
-    await PdfSchema.create({ title: title, pdf: fileName });
-    res.send({ status: "ok" });
+    const { data, error } = await supabase
+      .from('pdf_details')
+      .insert([
+        { title: title, pdf: fileName, created_at: new Date().toISOString() }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      res.status(500).json({ status: "error", message: error.message });
+    } else {
+      res.send({ status: "ok", data: data[0] });
+    }
   } catch (error) {
-    res.json({ status: error });
+    console.error('Server error:', error);
+    res.status(500).json({ status: "error", message: error.message });
   }
 });
 
@@ -80,10 +97,17 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
 app.get("/get-files", async (req, res) => {
   try {
     // Find the latest uploaded PDF file
-    const latestPdf = await PdfSchema.findOne({}).sort({ $natural: -1 });
+    const { data, error } = await supabase
+      .from('pdf_details')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (latestPdf) {
-      res.status(200).json({ data: latestPdf });
+    if (error) {
+      console.error('Supabase error:', error);
+      res.status(500).json({ error: "Database error" });
+    } else if (data && data.length > 0) {
+      res.status(200).json({ data: data[0] });
     } else {
       res.status(404).json({ error: "No PDF file found" });
     }
@@ -97,8 +121,17 @@ app.get("/get-files", async (req, res) => {
 //get all the upload files 
 app.get("/get-all-files", async (req, res) => {
   try {
-    const allFiles = await PdfSchema.find({});
-    res.status(200).json({ data: allFiles });
+    const { data, error } = await supabase
+      .from('pdf_details')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      res.status(500).json({ error: "Database error" });
+    } else {
+      res.status(200).json({ data: data || [] });
+    }
   } catch (error) {
     console.error("Error fetching all uploaded PDF files:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -214,74 +247,75 @@ app.post('/print-pdfs', async (req, res) => {
 });
 
 
-const serialport = require('serialport');
+// COM1 Serial Port features commented out
+// const serialport = require('serialport');
 
-// Define the SerialPort class
-const SerialPort = serialport.SerialPort
-const parsers = serialport.ReadlineParser;
-const parser = new parsers();
+// // Define the SerialPort class
+// const SerialPort = serialport.SerialPort
+// const parsers = serialport.ReadlineParser;
+// const parser = new parsers();
 
-console.log("SerialPort: ", SerialPort);
-const Readline = serialport.ReadlineParser;
+// console.log("SerialPort: ", SerialPort);
+// const Readline = serialport.ReadlineParser;
 
-// Create a new SerialPort instance with the specified port and settings
-const port = new SerialPort({
-  path: 'COM1',
-  baudRate: 9600,
-  dataBits: 8,
-  parity: 'none',
-  stopBits: 1,
-  flowControl: false,
-  parser: new Readline("\n")
-});
+// // Create a new SerialPort instance with the specified port and settings
+// const port = new SerialPort({
+//   path: 'COM1',
+//   baudRate: 9600,
+//   dataBits: 8,
+//   parity: 'none',
+//   stopBits: 1,
+//   flowControl: false,
+//   parser: new Readline("\n")
+// });
 
-// Event listener for when the serial port is opened
-port.on('open', () => {
-  console.log('Serial port open');
-});
+// // Event listener for when the serial port is opened
+// port.on('open', () => {
+//   console.log('Serial port open');
+// });
 
-// Event listener for errors
-port.on('error', (err) => {
-  console.error('Error:', err.message);
-});
+// // Event listener for errors
+// port.on('error', (err) => {
+//   console.error('Error:', err.message);
+// });
 
 
-let dataChunks = [];
-let latestValue = null; // Initialize latestValue
+// let dataChunks = [];
+// let latestValue = null; // Initialize latestValue
     
-port.on('data', (chunk) => {
-  // Convert the chunk to a number and push it to the dataChunks array
-  const numberChunk = parseFloat(chunk);
-  if (!isNaN(numberChunk)) {
-    dataChunks.push(numberChunk);
-    console.log('Data:', dataChunks);
+// port.on('data', (chunk) => {
+//   // Convert the chunk to a number and push it to the dataChunks array
+//   const numberChunk = parseFloat(chunk);
+//   if (!isNaN(numberChunk)) {
+//     dataChunks.push(numberChunk);
+//     console.log('Data:', dataChunks);
     
-    // Automatically update the latest value
-    latestValue = numberChunk;
-    console.log('Latest Value:', latestValue);
-  }
-});
+//     // Automatically update the latest value
+//     latestValue = numberChunk;
+//     console.log('Latest Value:', latestValue);
+//   }
+// });
 
-// Define the route handler
-app.get('/get-serial-data', (req, res) => {
-  try {
-    // Send the latest value as JSON response
-    res.json({ latestValue: latestValue });
-  } catch (error) {
-    console.error('Error while reading serial data:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// // Define the route handler
+// app.get('/get-serial-data', (req, res) => {
+//   try {
+//     // Send the latest value as JSON response
+//     res.json({ latestValue: latestValue });
+//   } catch (error) {
+//     console.error('Error while reading serial data:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
-app.post('/reset-serial-data', (req, res) => {
-  try {
-    latestValue = 0;
-    res.json({ message: 'Serial data reset successfully' });
-  } catch (error) {
-    console.error('Error resetting serial data:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// app.post('/reset-serial-data', (req, res) => {
+//   try {
+//     latestValue = 0;
+//     res.json({ message: 'Serial data reset successfully' });
+//   } catch (error) {
+//     console.error('Error resetting serial data:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 // // Simulate data reception for example purposes
 // setInterval(() => {
