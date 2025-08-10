@@ -49,7 +49,7 @@ const Print2: React.FC = () => {
   useEffect(() => {
     const fetchLatestValue = async () => {
       try {
-        const response = await fetch('http://localhost:5000/get-serial-data');
+        const response = await fetch('http://192.168.254.104:5000/get-serial-data');
         if (response.ok) {
           const data = await response.json();
           setLatestValue(data.latestValue);
@@ -74,7 +74,7 @@ const Print2: React.FC = () => {
     setShowPrintButton(false);
 
     // Optionally, send a request to the backend to log the reset action
-    fetch('http://localhost:5000/reset-serial-data', {
+    fetch('http://192.168.254.104:5000/reset-serial-data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -89,7 +89,7 @@ const Print2: React.FC = () => {
   const handleSubmit = async () => {
     try {
       // Send POST request to /print-pdf endpoint
-      const response = await axios.post("http://localhost:5000/print-pdf", {
+      const response = await axios.post("http://192.168.254.104:5000/print-pdf", {
         pdfFilePath: pdfPrint,
         printer: printer,
         pages: pages,
@@ -122,7 +122,7 @@ const Print2: React.FC = () => {
   const fetchUploadedFiles = async () => {
     try {
       const response = await axios.get<{ data: PdfData[] }>(
-        "http://localhost:5000/get-all-files"
+        "http://192.168.254.104:5000/get-all-files"
       );
       setUploadedFiles(response.data.data);
       console.log("Uploaded Files:", uploadedFiles);
@@ -138,7 +138,7 @@ const Print2: React.FC = () => {
         console.log("PDF to Print:", pdfPrint);
 
         console.log("Selected PDF:", selectedPdf);
-        setSelectedPdf(`http://localhost:5000/files/${selected}`)
+        setSelectedPdf(`http://192.168.254.104:5000/files/${selected}`)
         setFileName(selected.replace(/^\d+-\d+/, ''));
         console.log("Selected PDF:", selectedPdf.replace(/\//g, '\\'));
       }
@@ -271,6 +271,13 @@ useEffect(() => {
   // Cleanup function to clear the interval on component unmount
   return () => clearInterval(intervalId);
 }, [latestValue, printPrice]);
+
+  // Call smartPricing whenever pages or numOfCopies changes
+  useEffect(() => {
+    if (pages && numOfCopies) {
+      smartPricing();
+    }
+  }, [pages, numOfCopies]);
 
   return (
     <div

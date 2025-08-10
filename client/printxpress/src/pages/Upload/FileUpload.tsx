@@ -1,124 +1,74 @@
-import { useState, ChangeEvent, FormEvent} from "react";
-import axios from "axios";
-import { pdfjs } from "react-pdf";
+import { useState, useEffect } from "react";
 import backgroundImage from "../../assets/bg.png";
-import sample from "../../assets/sample-pdf.png";
-import { Link } from "react-router-dom";
-import pdfPNG from "../../assets/pdf.png";
 import Navbar from "../components/HomeNavbar";
+import QRCode from "qrcode";
+import pdfIcon from "../../assets/pdf.png";
+import { useNavigate } from "react-router-dom";
 
-// Worker to parse PDFs
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.js", import.meta.url).toString();
+const LOCAL_IP = "192.168.254.104";
+const PORT = "5173";
+const MOBILE_UPLOAD_URL = `http://${LOCAL_IP}:${PORT}/mobile-upload`;
+const BACKEND_URL = `http://${LOCAL_IP}:5000`;
 
-// Interface for PDF data
-interface PdfData {
-  title: string;
-  pdf: string;
-}
-
-// Main component
 function Upload(): JSX.Element {
-  // State to store title
-  const [title] = useState<string>("Test");
-  // State to store file
-  const [file, setFile] = useState<File | string>("");
+  // State for QR code
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
+  // State for latest uploaded file
+  const [latestFile, setLatestFile] = useState<{ title: string; pdf: string } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const navigate = useNavigate();
 
-  const [uploadedFiles, setUploadedFiles] = useState<PdfData[] | null>(null); // State to store the list of uploaded files
-
-  const [fileName, setFileName] = useState("");
-
-  // const [serialData, setSerialData] = useState<number>(0);
-
-  // useEffect(() => {
-  //   const fetchSerialData = async () => {
-  //     try {
-  //       const response = await axios.get('http://localhost:5000/get-serial-data');
-  //       setSerialData(response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching serial data:', error);
-  //     }
-  //   };
-
-  //   fetchSerialData();
-
-  //   // Clean up event listeners when component unmounts
-  //   return () => {
-  //     // You might need to implement a cleanup mechanism here
-  //   };
-  // }, []);
-
-
-  // Fetch PDFs from server
-  const getPdf = async (): Promise<void> => {
+  // Generate QR code for mobile upload
+  const generateQRCode = async () => {
     try {
-      // Send GET request to server
-      const response = await axios.get<{ data: PdfData[] }>(
-        "http://localhost:5000/get-all-files"
-      );
-      setUploadedFiles(response.data.data);
-      console.log("Uploaded Files:", uploadedFiles);
-
-      // Set the selected PDF to the first uploaded PDF, if available
-      if (response.data.data && response.data.data.length > 0) {
-        const pageNumber = response.data.data.length;
-        const selected = response.data.data[pageNumber - 1].pdf;
-
-        setFileName(selected.replace(/^\d+-\d+/, ''));
-      }
+      const qrCodeDataUrl = await QRCode.toDataURL(MOBILE_UPLOAD_URL, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeDataUrl(qrCodeDataUrl);
     } catch (error) {
-      console.error("Error fetching PDFs:", error);
+      console.error('Error generating QR code:', error);
     }
   };
 
-
-  // Upload PDF to server
-  const uploadFile = async (e: FormEvent): Promise<void> => {
-    // Prevent default form submission
-    e.preventDefault();
-    // Create form data
-    const formData = new FormData();
-    // Append title and file to form data
-    formData.append("title", title);
-    // Check if file is a string
-    if (typeof file !== "string") {
-      formData.append("file", file);
-    }
-
-    // Send POST request to server
+  // Fetch the latest uploaded file
+  const fetchLatestFile = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const result = await axios.post(
-        "http://localhost:5000/upload-files",
-        formData,
-        {
-          // Set content type to multipart form data
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      console.log(result);
-      // Check if upload was successful
-      if (result.data.status === "ok") {
-        alert("Uploaded Successfully!");
-        // Fetch PDFs
-        getPdf();
+      const response = await fetch(`${BACKEND_URL}/get-files`);
+      if (!response.ok) throw new Error("Failed to fetch latest file");
+      const data = await response.json();
+      if (data && data.data) {
+        setLatestFile(data.data);
+      } else {
+        setLatestFile(null);
       }
-    } catch (error) {
-      console.error("Error uploading file:", error);
+    } catch (err) {
+      setError("Could not load latest uploaded file.");
+      setLatestFile(null);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
+  // Poll for new uploads every 5 seconds
+  useEffect(() => {
+    generateQRCode();
+    fetchLatestFile();
+    const interval = setInterval(fetchLatestFile, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-
-  // // Show PDF in PDF viewer
-  // const showPdf = (pdf: string): void => {
-  //   setPdfFile(`http://localhost:5000/files/${pdf}`);
-  // };
-
-  // Handle file change
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    // Check if file is selected
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+  // Handle click to print
+  const handlePrintClick = () => {
+    if (latestFile) {
+      navigate(`/print?file=${encodeURIComponent(latestFile.pdf)}&title=${encodeURIComponent(latestFile.title)}`);
     }
   };
 
@@ -128,74 +78,70 @@ function Upload(): JSX.Element {
       className="bg-cover bg-center min-h-screen"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
-
       <div className="max-w-[1500px] mx-auto text-center">
         <Navbar />
-        {/* <div>
-          <h1>Serial Data:</h1>
-          <p>{serialData}</p>
-        </div> */}
         <div className="flex items-center justify-center mt-16 px-12 relative">
           <div className="mr-16">
-            <div className="w-80 h-80 bg-white">
-              <div className="text-center text-[40px] font-semibold">
+            <div className="w-80 h-80 bg-white rounded-lg shadow-lg p-6">
+              <div className="text-center text-[32px] font-semibold mb-4">
                 Print<span className="text-yellow-500">X</span>press
               </div>
-              <div>
-
-                <form className="space-y-4" onSubmit={uploadFile}>
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input mt-1 block w-full border-gray-300 rounded-md py-2 px-3 text-base leading-6 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent justify-center text-center"
-                      placeholder="Enter title"
-                      required
-                      onChange={(e) => setTitle(e.target.value)}
+              <div className="text-center">
+                <div className="text-lg font-medium text-gray-700 mb-4">
+                  Scan QR Code to Upload
+                </div>
+                {qrCodeDataUrl ? (
+                  <div className="flex flex-col items-center">
+                    <img 
+                      src={qrCodeDataUrl} 
+                      alt="QR Code for mobile upload" 
+                      className="w-48 h-48 border-2 border-gray-200 rounded-lg"
                     />
-                  </div> */}
-                  <div className=" mt-8">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Upload PDF
-                    </label>
-                    <input
-                      type="file"
-                      className="form-input mt-1 block w-full border rounded-md py-2 px-3 text-base leading-6"
-                      accept="application/pdf"
-                      required
-                      onChange={handleFileChange}
-                    />
-                  </div>
-                  <div className="text-center mt-4">
+                    <div className="mt-4 text-sm text-gray-600">
+                      <p>Scan with your phone</p>
+                      <p>to upload PDF files</p>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <p>or visit:</p>
+                      <p className="font-mono text-blue-600 break-all">{MOBILE_UPLOAD_URL}</p>
+                    </div>
                     <button
-                      type="submit"
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                      onClick={generateQRCode}
+                      className="mt-3 px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                     >
-                      Submit
+                      Refresh QR Code
                     </button>
                   </div>
-                </form>
+                ) : (
+                  <div className="flex items-center justify-center h-48">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                  </div>
+                )}
               </div>
-
             </div>
-            <div className="text-2xl font-semibold mt-2"> Upload Your File Here </div>
+            <div className="text-2xl font-semibold mt-2 text-center">Scan & Upload Your File</div>
           </div>
-
-
-          <div className="border rounded-lg w-[900px] h-[500px] bg-white relative">
-            <img
-              src={pdfPNG}
-              alt="pdf"
-              className="absolute top-0 right-0 -mt-10 mr-4 w-20 h-20"
-            />
-            {/* //sample pdf lang para ma link pero diri ang pdf dapat nga uploaded*/}
-            <Link to="/print">
-              <img src={sample} alt="pdf" className="w-28 h-28 px-4 py-4" />
-              <p className="w-28 h-28 px-4">{fileName}</p>
-
-            </Link>
+          {/* Right panel: Latest uploaded file as clickable PDF icon */}
+          <div className="border rounded-lg w-[900px] h-[500px] bg-white relative flex flex-col items-center justify-center p-8">
+            {loading ? (
+              <div className="text-lg text-gray-500">Loading latest uploaded file...</div>
+            ) : error ? (
+              <div className="text-red-500">{error}</div>
+            ) : latestFile ? (
+              <div className="flex flex-col items-center cursor-pointer group" onClick={handlePrintClick} title="Click to print this PDF">
+                <img
+                  src={pdfIcon}
+                  alt="PDF Icon"
+                  className="w-32 h-32 mb-4 group-hover:scale-105 transition-transform"
+                />
+                <div className="text-lg font-medium mb-2 group-hover:underline text-blue-700">
+                  {latestFile.title}
+                </div>
+                <div className="text-xs text-gray-400">Click to print</div>
+              </div>
+            ) : (
+              <div className="text-gray-500">No PDF uploaded yet.</div>
+            )}
           </div>
         </div>
       </div>
