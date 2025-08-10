@@ -1,5 +1,6 @@
 import logo from "../../assets/logo.png";
 import cpuLogo from "../../assets/cpu-logo.png"
+import { Link } from "react-router-dom";
 
 const HomeNavbar = () => {
   // Get current date and time
@@ -23,7 +24,9 @@ const HomeNavbar = () => {
   return (
     <div className="flex items-center justify-between py-4 px-2">
       <div className="flex items-center">
-        <img src={logo} alt="Logo" className="h-24 w-24 mr-2" />
+        <Link to="/" className="hover:scale-105 transition-transform duration-200">
+          <img src={logo} alt="Logo" className="h-24 w-24 mr-2 cursor-pointer" />
+        </Link>
       </div>
 
       <div className="text-center">
